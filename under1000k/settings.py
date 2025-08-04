@@ -37,6 +37,9 @@ if not DEBUG:
     current_domain = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
     if current_domain and current_domain not in ALLOWED_HOSTS:
         ALLOWED_HOSTS.append(current_domain)
+else:
+    # Add testserver for development testing
+    ALLOWED_HOSTS.extend(['testserver', 'localhost'])
 
 
 # Application definition
@@ -60,6 +63,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'core.middleware.StaticFilesMiddleware',  # Middleware personalizado para archivos estáticos
+    'core.middleware.AuthLoggingMiddleware',  # Middleware para logging de autenticación
 ]
 
 ROOT_URLCONF = 'under1000k.urls'

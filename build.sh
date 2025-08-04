@@ -10,4 +10,7 @@ python manage.py collectstatic --no-input
 python manage.py setup_production
 
 # Diagnóstico de autenticación
-python manage.py check_auth 
+python manage.py check_auth
+
+# Test de login
+python manage.py test_login 
