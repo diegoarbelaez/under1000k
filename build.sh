@@ -9,4 +9,7 @@ python manage.py migrate
 
 # Poblar categorías y datos de ejemplo
 python manage.py populate_categories
-python manage.py populate_sample_data 
+python manage.py populate_sample_data
+
+# Crear superusuario para el admin
+python manage.py create_superuser 
