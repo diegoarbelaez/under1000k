@@ -1,0 +1,303 @@
+{% extends 'base.html' %}
+
+{% block title %}Análisis de Comida - Under1000k{% endblock %}
+
+{% block extra_css %}
+<style>
+    .upload-area {
+        border: 2px dashed #e5e7eb;
+        border-radius: 12px;
+        padding: 3rem;
+        text-align: center;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        background-color: #f9fafb;
+    }
+    
+    .upload-area:hover {
+        border-color: var(--primary-color);
+        background-color: #f0f9ff;
+    }
+    
+    .upload-area.dragover {
+        border-color: var(--primary-color);
+        background-color: #e0f2fe;
+    }
+    
+    .preview-image {
+        max-width: 100%;
+        max-height: 300px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    .loading-spinner {
+        display: none;
+    }
+    
+    .analysis-result {
+        background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-top: 1rem;
+    }
+    
+    .food-item {
+        background: white;
+        border-radius: 8px;
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .confidence-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .confidence-high {
+        background-color: #dcfce7;
+        color: #166534;
+    }
+    
+    .confidence-medium {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+    
+    .confidence-low {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-camera me-2"></i>Análisis de Comida
+                </h4>
+                <small>{{ meal.get_meal_type_display }} - {{ meal.date|date:"d/m/Y" }}</small>
+            </div>
+            <div class="card-body">
+                <!-- Meal Info -->
+                <div class="alert alert-info mb-4">
+                    <h6><i class="fas fa-info-circle me-2"></i>Información de la Comida</h6>
+                    <p class="mb-1"><strong>Tipo:</strong> {{ meal.get_meal_type_display }}</p>
+                    <p class="mb-1"><strong>Fecha:</strong> {{ meal.date|date:"d/m/Y" }}</p>
+                    <p class="mb-0"><strong>Hora:</strong> {{ meal.time|time:"H:i" }}</p>
+                    {% if meal.notes %}
+                        <p class="mb-0"><strong>Notas:</strong> {{ meal.notes }}</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Upload Section -->
+                <div id="upload-section">
+                    <h5 class="mb-3"><i class="fas fa-upload me-2"></i>Subir Foto de la Comida</h5>
+                    
+                    <form method="post" enctype="multipart/form-data" id="upload-form">
+                        {% csrf_token %}
+                        <div class="upload-area" id="upload-area">
+                            <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                            <h5>Arrastra tu foto aquí o haz clic para seleccionar</h5>
+                            <p class="text-muted">Formatos soportados: JPEG, PNG, WEBP (máximo 10MB)</p>
+                            <input type="file" name="food_image" id="food-image-input" 
+                                   accept="image/*" style="display: none;" required>
+                        </div>
+                        
+                        <div class="text-center mt-3">
+                            <button type="submit" class="btn btn-primary" id="analyze-btn">
+                                <i class="fas fa-brain me-2"></i>Analizar con IA
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Loading Section -->
+                <div id="loading-section" class="text-center" style="display: none;">
+                    <div class="loading-spinner">
+                        <i class="fas fa-spinner fa-spin fa-3x text-primary mb-3"></i>
+                        <h5>Analizando tu comida...</h5>
+                        <p class="text-muted">La IA está identificando los alimentos y calculando las calorías</p>
+                        <div class="progress mt-3">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                 style="width: 100%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Preview Section -->
+                <div id="preview-section" style="display: none;">
+                    <h5 class="mb-3"><i class="fas fa-image me-2"></i>Vista Previa</h5>
+                    <div class="text-center">
+                        <img id="preview-image" class="preview-image" alt="Vista previa de la comida">
+                    </div>
+                </div>
+                
+                <!-- Analysis Results -->
+                <div id="analysis-results" style="display: none;">
+                    <div class="analysis-result">
+                        <h5 class="mb-3">
+                            <i class="fas fa-chart-pie me-2"></i>Resultados del Análisis
+                        </h5>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="stat-card">
+                                    <div class="stat-number" id="total-calories">0</div>
+                                    <div class="stat-label">Calorías Totales</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="stat-card">
+                                    <div class="stat-number" id="food-count">0</div>
+                                    <div class="stat-label">Alimentos Identificados</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="food-items">
+                            <!-- Food items will be populated here -->
+                        </div>
+                        
+                        <div class="alert alert-warning mt-3">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Nota:</strong> Los resultados son estimaciones basadas en la imagen. 
+                            Puedes ajustar las cantidades si es necesario.
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                            <button type="button" class="btn btn-outline-secondary me-md-2" id="retry-btn">
+                                <i class="fas fa-redo me-2"></i>Intentar de Nuevo
+                            </button>
+                            <button type="button" class="btn btn-success" id="confirm-btn">
+                                <i class="fas fa-check me-2"></i>Confirmar y Guardar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadArea = document.getElementById('upload-area');
+    const fileInput = document.getElementById('food-image-input');
+    const uploadForm = document.getElementById('upload-form');
+    const previewSection = document.getElementById('preview-section');
+    const previewImage = document.getElementById('preview-image');
+    const loadingSection = document.getElementById('loading-section');
+    const analysisResults = document.getElementById('analysis-results');
+    const retryBtn = document.getElementById('retry-btn');
+    const confirmBtn = document.getElementById('confirm-btn');
+    
+    // Drag and drop functionality
+    uploadArea.addEventListener('click', () => fileInput.click());
+    
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+    
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+    });
+    
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            handleFileSelect();
+        }
+    });
+    
+    fileInput.addEventListener('change', handleFileSelect);
+    
+    function handleFileSelect() {
+        const file = fileInput.files[0];
+        if (file) {
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImage.src = e.target.result;
+                previewSection.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+    
+    // Form submission
+    uploadForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(uploadForm);
+        
+        // Show loading
+        document.getElementById('upload-section').style.display = 'none';
+        loadingSection.style.display = 'block';
+        
+        // Simulate analysis (replace with actual API call)
+        setTimeout(() => {
+            loadingSection.style.display = 'none';
+            analysisResults.style.display = 'block';
+            
+            // Mock results
+            document.getElementById('total-calories').textContent = '450';
+            document.getElementById('food-count').textContent = '3';
+            
+            const foodItems = document.getElementById('food-items');
+            foodItems.innerHTML = `
+                <div class="food-item">
+                    <div>
+                        <strong>Arroz blanco</strong>
+                        <br><small class="text-muted">150g - 195 kcal</small>
+                    </div>
+                    <span class="confidence-badge confidence-high">Alta confianza</span>
+                </div>
+                <div class="food-item">
+                    <div>
+                        <strong>Pollo (pechuga)</strong>
+                        <br><small class="text-muted">100g - 165 kcal</small>
+                    </div>
+                    <span class="confidence-badge confidence-medium">Media confianza</span>
+                </div>
+                <div class="food-item">
+                    <div>
+                        <strong>Ensalada mixta</strong>
+                        <br><small class="text-muted">50g - 90 kcal</small>
+                    </div>
+                    <span class="confidence-badge confidence-low">Baja confianza</span>
+                </div>
+            `;
+        }, 3000);
+    });
+    
+    // Retry button
+    retryBtn.addEventListener('click', function() {
+        analysisResults.style.display = 'none';
+        previewSection.style.display = 'none';
+        document.getElementById('upload-section').style.display = 'block';
+        fileInput.value = '';
+    });
+    
+    // Confirm button
+    confirmBtn.addEventListener('click', function() {
+        // Redirect to meal detail page
+        window.location.href = "{% url 'core:meal_detail' meal.id %}";
+    });
+});
+</script>
+{% endblock %} 

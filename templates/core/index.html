@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+
+{% block title %}Under1000k - Tu Contador de Calorías Inteligente{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="row align-items-center mb-5">
+    <div class="col-lg-6">
+        <h1 class="display-4 fw-bold mb-4">
+            <i class="fas fa-apple-alt text-primary me-3"></i>
+            Under1000k
+        </h1>
+        <h2 class="h3 text-muted mb-4">Tu contador de calorías inteligente</h2>
+        <p class="lead mb-4">
+            Toma una foto de tu comida y deja que la IA identifique automáticamente los alimentos 
+            y calcule las calorías. Mantén tu objetivo de menos de 1000kcal por día.
+        </p>
+        <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+            <a href="{% url 'admin:login' %}" class="btn btn-primary btn-lg px-4 me-md-2">
+                <i class="fas fa-sign-in-alt me-2"></i>Comenzar Ahora
+            </a>
+            <a href="#features" class="btn btn-outline-primary btn-lg px-4">
+                <i class="fas fa-info-circle me-2"></i>Saber Más
+            </a>
+        </div>
+    </div>
+    <div class="col-lg-6 text-center">
+        <div class="calorie-counter">
+            <div class="text-center">
+                <i class="fas fa-fire fa-5x text-white mb-3"></i>
+                <h3 class="text-white">1000 kcal</h3>
+                <p class="text-white-50">Tu objetivo diario</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div id="features" class="row mb-5">
+    <div class="col-12">
+        <h2 class="text-center mb-5">
+            <i class="fas fa-star text-warning me-2"></i>Características Principales
+        </h2>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-camera fa-3x text-primary mb-3"></i>
+                <h5 class="card-title">Foto Inteligente</h5>
+                <p class="card-text">
+                    Toma una foto de tu comida y la IA identificará automáticamente los alimentos 
+                    y calculará las calorías.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-chart-line fa-3x text-success mb-3"></i>
+                <h5 class="card-title">Seguimiento Diario</h5>
+                <p class="card-text">
+                    Mantén un control preciso de tus calorías diarias con un objetivo claro 
+                    de menos de 1000kcal.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-mobile-alt fa-3x text-info mb-3"></i>
+                <h5 class="card-title">Diseño Responsive</h5>
+                <p class="card-text">
+                    Usa la aplicación en cualquier dispositivo: móvil, tablet o computadora 
+                    con una interfaz moderna.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- How It Works Section -->
+<div class="row mb-5">
+    <div class="col-12">
+        <h2 class="text-center mb-5">
+            <i class="fas fa-play-circle text-primary me-2"></i>Cómo Funciona
+        </h2>
+    </div>
+    
+    <div class="col-md-3 text-center mb-4">
+        <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+             style="width: 80px; height: 80px;">
+            <i class="fas fa-camera fa-2x"></i>
+        </div>
+        <h5>1. Toma una Foto</h5>
+        <p class="text-muted">Captura tu comida con buena iluminación</p>
+    </div>
+    
+    <div class="col-md-3 text-center mb-4">
+        <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+             style="width: 80px; height: 80px;">
+            <i class="fas fa-brain fa-2x"></i>
+        </div>
+        <h5>2. IA Analiza</h5>
+        <p class="text-muted">La inteligencia artificial identifica los alimentos</p>
+    </div>
+    
+    <div class="col-md-3 text-center mb-4">
+        <div class="bg-warning text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+             style="width: 80px; height: 80px;">
+            <i class="fas fa-calculator fa-2x"></i>
+        </div>
+        <h5>3. Calcula Calorías</h5>
+        <p class="text-muted">Obtén el conteo automático de calorías</p>
+    </div>
+    
+    <div class="col-md-3 text-center mb-4">
+        <div class="bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+             style="width: 80px; height: 80px;">
+            <i class="fas fa-chart-bar fa-2x"></i>
+        </div>
+        <h5>4. Monitorea</h5>
+        <p class="text-muted">Revisa tu progreso hacia el objetivo</p>
+    </div>
+</div>
+
+<!-- Benefits Section -->
+<div class="row mb-5">
+    <div class="col-12">
+        <h2 class="text-center mb-5">
+            <i class="fas fa-heart text-danger me-2"></i>Beneficios
+        </h2>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5><i class="fas fa-clock text-primary me-2"></i>Ahorra Tiempo</h5>
+                <p class="card-text">
+                    No más conteo manual de calorías. La IA hace el trabajo por ti en segundos.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5><i class="fas fa-bullseye text-success me-2"></i>Objetivo Claro</h5>
+                <p class="card-text">
+                    Mantén tu objetivo de 1000kcal diarias con seguimiento visual y alertas.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5><i class="fas fa-history text-info me-2"></i>Historial Completo</h5>
+                <p class="card-text">
+                    Revisa todas tus comidas anteriores y analiza tus patrones alimenticios.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5><i class="fas fa-shield-alt text-warning me-2"></i>Privacidad</h5>
+                <p class="card-text">
+                    Tus datos están seguros y solo tú tienes acceso a tu información personal.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CTA Section -->
+<div class="row">
+    <div class="col-12">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <h3 class="mb-3">
+                    <i class="fas fa-rocket me-2"></i>¿Listo para Comenzar?
+                </h3>
+                <p class="lead mb-4">
+                    Únete a miles de usuarios que ya están controlando sus calorías de manera inteligente.
+                </p>
+                <a href="{% url 'admin:login' %}" class="btn btn-light btn-lg">
+                    <i class="fas fa-sign-in-alt me-2"></i>Comenzar Gratis
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

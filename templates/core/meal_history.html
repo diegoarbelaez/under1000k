@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+
+{% block title %}Historial de Comidas - Under1000k{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-history me-2"></i>Historial de Comidas</h2>
+                <a href="{% url 'core:add_meal' %}" class="btn btn-success">
+                    <i class="fas fa-plus me-2"></i>Agregar Comida
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="date_from" class="form-label">Desde</label>
+                            <input type="date" class="form-control" id="date_from" name="date_from" 
+                                   value="{{ request.GET.date_from }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="date_to" class="form-label">Hasta</label>
+                            <input type="date" class="form-control" id="date_to" name="date_to" 
+                                   value="{{ request.GET.date_to }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="meal_type" class="form-label">Tipo de Comida</label>
+                            <select class="form-select" id="meal_type" name="meal_type">
+                                <option value="">Todos</option>
+                                <option value="breakfast" {% if request.GET.meal_type == 'breakfast' %}selected{% endif %}>Desayuno</option>
+                                <option value="lunch" {% if request.GET.meal_type == 'lunch' %}selected{% endif %}>Almuerzo</option>
+                                <option value="dinner" {% if request.GET.meal_type == 'dinner' %}selected{% endif %}>Cena</option>
+                                <option value="snack" {% if request.GET.meal_type == 'snack' %}selected{% endif %}>Snack</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search me-2"></i>Filtrar
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-number">{{ total_meals }}</div>
+                <div class="stat-label">Total Comidas</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-number">{{ total_calories }}</div>
+                <div class="stat-label">Calorías Totales</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-number">{{ avg_calories|floatformat:0 }}</div>
+                <div class="stat-label">Promedio por Comida</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-number">{{ days_count }}</div>
+                <div class="stat-label">Días Registrados</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Comidas -->
+    <div class="row">
+        <div class="col-12">
+            {% if meals %}
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Hora</th>
+                                        <th>Tipo</th>
+                                        <th>Calorías</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for meal in meals %}
+                                    <tr>
+                                        <td>{{ meal.date|date:"d/m/Y" }}</td>
+                                        <td>{{ meal.time|time:"H:i" }}</td>
+                                        <td>
+                                            <span class="badge bg-success">{{ meal.get_meal_type_display }}</span>
+                                        </td>
+                                        <td>
+                                            <strong>{{ meal.total_calories }} kcal</strong>
+                                        </td>
+                                        <td>
+                                            {% if meal.analysis_completed %}
+                                                <span class="badge bg-success">Completado</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">Pendiente</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'core:meal_detail' meal.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% if not meal.analysis_completed %}
+                                                <a href="{% url 'core:meal_analysis' meal.id %}" class="btn btn-sm btn-outline-warning">
+                                                    <i class="fas fa-camera"></i>
+                                                </a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Paginación -->
+                        {% if meals.has_other_pages %}
+                        <nav aria-label="Paginación de comidas">
+                            <ul class="pagination justify-content-center">
+                                {% if meals.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ meals.previous_page_number }}&{{ request.GET.urlencode }}">
+                                            <i class="fas fa-chevron-left"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+
+                                {% for num in meals.paginator.page_range %}
+                                    {% if meals.number == num %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ num }}</span>
+                                        </li>
+                                    {% elif num > meals.number|add:'-3' and num < meals.number|add:'3' %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ num }}&{{ request.GET.urlencode }}">{{ num }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if meals.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ meals.next_page_number }}&{{ request.GET.urlencode }}">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    </div>
+                </div>
+            {% else %}
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-utensils fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">No hay comidas registradas</h4>
+                        <p class="text-muted">Comienza agregando tu primera comida</p>
+                        <a href="{% url 'core:add_meal' %}" class="btn btn-success">
+                            <i class="fas fa-plus me-2"></i>Agregar Primera Comida
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

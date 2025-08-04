@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+
+{% block title %}Estadísticas - Under1000k{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2><i class="fas fa-chart-bar me-2"></i>Estadísticas</h2>
+        </div>
+    </div>
+
+    <!-- Resumen General -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-number">{{ total_calories }}</div>
+                <div class="stat-label">Calorías Totales</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-number">{{ avg_daily_calories|floatformat:0 }}</div>
+                <div class="stat-label">Promedio Diario</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-number">{{ days_tracked }}</div>
+                <div class="stat-label">Días Registrados</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-number">{{ goal_achievement|floatformat:1 }}%</div>
+                <div class="stat-label">Cumplimiento Objetivo</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos y Análisis -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-utensils me-2"></i>Análisis de Comidas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6 class="text-muted">Distribución por Tipo</h6>
+                        {% for meal_type, count in meal_type_distribution.items %}
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>{{ meal_type }}</span>
+                            <span class="badge bg-success">{{ count }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-3">
+                        <h6 class="text-muted">Promedio de Calorías por Comida</h6>
+                        <div class="display-6 text-success">{{ avg_meal_calories|floatformat:0 }} kcal</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <h6 class="text-muted">Día con Más Calorías</h6>
+                        <div class="d-flex justify-content-between">
+                            <span>{{ max_calories_date|date:"d/m/Y" }}</span>
+                            <span class="badge bg-warning">{{ max_calories }} kcal</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-warning text-white">
+                    <h5 class="mb-0"><i class="fas fa-glass-whiskey me-2"></i>Análisis de Bebidas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6 class="text-muted">Total de Bebidas</h6>
+                        <div class="display-6 text-warning">{{ total_drinks }}</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <h6 class="text-muted">Volumen Total Consumido</h6>
+                        <div class="display-6 text-info">{{ total_volume|floatformat:0 }} ml</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <h6 class="text-muted">Promedio de Calorías por Bebida</h6>
+                        <div class="display-6 text-warning">{{ avg_drink_calories|floatformat:0 }} kcal</div>
+                    </div>
+
+                    {% if top_drinks %}
+                    <div class="mb-3">
+                        <h6 class="text-muted">Bebidas Más Consumidas</h6>
+                        {% for drink, count in top_drinks %}
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>{{ drink }}</span>
+                            <span class="badge bg-warning">{{ count }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tendencias Semanales -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Tendencias Semanales</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Semana</th>
+                                    <th>Calorías Totales</th>
+                                    <th>Promedio Diario</th>
+                                    <th>Días Registrados</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for week in weekly_trends %}
+                                <tr>
+                                    <td>{{ week.week_start|date:"d/m/Y" }} - {{ week.week_end|date:"d/m/Y" }}</td>
+                                    <td><strong>{{ week.total_calories }} kcal</strong></td>
+                                    <td>{{ week.avg_daily|floatformat:0 }} kcal</td>
+                                    <td>{{ week.days_count }}/7</td>
+                                    <td>
+                                        {% if week.avg_daily <= user_profile.daily_calorie_goal %}
+                                            <span class="badge bg-success">Dentro del objetivo</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">Excedido</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recomendaciones -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Recomendaciones</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Basado en tu historial:</h6>
+                            <ul class="list-unstyled">
+                                {% if avg_daily_calories > user_profile.daily_calorie_goal %}
+                                    <li><i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                                        Tu promedio diario está por encima del objetivo
+                                    </li>
+                                {% else %}
+                                    <li><i class="fas fa-check-circle text-success me-2"></i>
+                                        ¡Excelente! Mantienes un buen control
+                                    </li>
+                                {% endif %}
+                                
+                                {% if days_tracked < 7 %}
+                                    <li><i class="fas fa-info-circle text-info me-2"></i>
+                                        Registra más días para obtener mejores estadísticas
+                                    </li>
+                                {% endif %}
+                                
+                                {% if total_drinks > total_meals %}
+                                    <li><i class="fas fa-glass-whiskey text-warning me-2"></i>
+                                        Considera reducir el consumo de bebidas calóricas
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Próximos pasos:</h6>
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'core:add_meal' %}" class="btn btn-success btn-sm">
+                                    <i class="fas fa-plus me-2"></i>Registrar Comida
+                                </a>
+                                <a href="{% url 'core:meal_history' %}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-history me-2"></i>Ver Historial Completo
+                                </a>
+                                <a href="{% url 'core:user_settings' %}" class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-cog me-2"></i>Ajustar Objetivo
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

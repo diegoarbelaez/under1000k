@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}Configuración - Under1000k{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2><i class="fas fa-cog me-2"></i>Configuración</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-user me-2"></i>Perfil de Usuario</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">Nombre de Usuario</label>
+                                    <input type="text" class="form-control" id="username" name="username" 
+                                           value="{{ user.username }}" readonly>
+                                    <small class="text-muted">No se puede cambiar</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="email" name="email" 
+                                           value="{{ user.email }}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="daily_calorie_goal" class="form-label">Objetivo Diario de Calorías</label>
+                                    <input type="number" class="form-control" id="daily_calorie_goal" 
+                                           name="daily_calorie_goal" value="{{ user_settings.daily_calorie_goal }}" 
+                                           min="500" max="5000">
+                                    <small class="text-muted">Entre 500 y 5000 kcal</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="notifications_enabled" class="form-label">Notificaciones</label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="notifications_enabled" 
+                                               name="notifications_enabled" 
+                                               {% if user_settings.notifications_enabled %}checked{% endif %}>
+                                        <label class="form-check-label" for="notifications_enabled">
+                                            Recibir recordatorios
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Guardar Cambios
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Información</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6 class="text-muted">Miembro desde</h6>
+                        <p class="mb-0">{{ user.date_joined|date:"d/m/Y" }}</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="text-muted">Último acceso</h6>
+                        <p class="mb-0">{{ user.last_login|date:"d/m/Y H:i"|default:"Nunca" }}</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <h6 class="text-muted">Estado de la cuenta</h6>
+                        {% if user.is_active %}
+                            <span class="badge bg-success">Activa</span>
+                        {% else %}
+                            <span class="badge bg-danger">Inactiva</span>
+                        {% endif %}
+                    </div>
+
+                    <hr>
+
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'core:dashboard' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Volver al Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

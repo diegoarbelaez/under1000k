@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}Agregar Comida - Under1000k{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-utensils me-2"></i>Registrar Nueva Comida</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="meal_type" class="form-label">
+                                    <i class="fas fa-clock me-2"></i>Tipo de Comida
+                                </label>
+                                <select name="meal_type" id="meal_type" class="form-select" required>
+                                    <option value="">Selecciona el tipo de comida</option>
+                                    <option value="breakfast">Desayuno</option>
+                                    <option value="lunch">Almuerzo</option>
+                                    <option value="dinner">Cena</option>
+                                    <option value="snack">Snack</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="estimated_calories" class="form-label">
+                                    <i class="fas fa-fire me-2"></i>Calorías Estimadas
+                                </label>
+                                <input type="number" name="estimated_calories" id="estimated_calories" 
+                                       class="form-control" min="50" max="2000" value="350" 
+                                       placeholder="Ej: 350">
+                                <small class="text-muted">Puedes ajustar después del análisis</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="notes" class="form-label">
+                                    <i class="fas fa-sticky-note me-2"></i>Notas (opcional)
+                                </label>
+                                <textarea name="notes" id="notes" class="form-control" rows="3" 
+                                          placeholder="Describe tu comida, ingredientes especiales, etc."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Próximo paso:</strong> Después de registrar la comida, podrás subir una foto para que la IA analice automáticamente las calorías.
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'core:dashboard' %}" class="btn btn-outline-secondary me-md-2">
+                            <i class="fas fa-arrow-left me-2"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-arrow-right me-2"></i>Continuar con Foto
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Tips Section -->
+        <div class="card mt-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Consejos para Mejores Resultados</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-camera me-2"></i>Para la Foto:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success me-2"></i>Buena iluminación</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Plato bien visible</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Evita sombras</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Enfoque nítido</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-utensils me-2"></i>Para el Análisis:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success me-2"></i>Alimentos visibles</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Cantidades realistas</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Puedes ajustar después</li>
+                            <li><i class="fas fa-check text-success me-2"></i>IA mejora con el tiempo</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+
+{% block title %}Agregar Bebida - Under1000k{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-warning text-white">
+                <h4 class="mb-0"><i class="fas fa-glass-whiskey me-2"></i>Registrar Nueva Bebida</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="drink" class="form-label">
+                                    <i class="fas fa-glass-whiskey me-2"></i>Bebida
+                                </label>
+                                <select name="drink" id="drink" class="form-select" required>
+                                    <option value="">Selecciona una bebida</option>
+                                    {% for drink in drinks %}
+                                        <option value="{{ drink.id }}" data-calories="{{ drink.calories_per_100ml }}">
+                                            {{ drink.name }} ({{ drink.category.name }})
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="quantity_ml" class="form-label">
+                                    <i class="fas fa-ruler me-2"></i>Cantidad (ml)
+                                </label>
+                                <input type="number" name="quantity_ml" id="quantity_ml" 
+                                       class="form-control" min="1" max="5000" required
+                                       placeholder="Ej: 250">
+                                <div class="form-text">Ingresa la cantidad en mililitros</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">
+                            <i class="fas fa-sticky-note me-2"></i>Notas (opcional)
+                        </label>
+                        <textarea name="notes" id="notes" class="form-control" rows="3" 
+                                  placeholder="Describe tu bebida, ingredientes especiales, etc."></textarea>
+                    </div>
+                    
+                    <!-- Calorie Preview -->
+                    <div id="calorie-preview" class="alert alert-info" style="display: none;">
+                        <h6><i class="fas fa-calculator me-2"></i>Vista Previa de Calorías</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <strong>Bebida:</strong><br>
+                                <span id="selected-drink">-</span>
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Cantidad:</strong><br>
+                                <span id="selected-quantity">-</span> ml
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Calorías:</strong><br>
+                                <span id="calculated-calories" class="text-primary">-</span> kcal
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'core:dashboard' %}" class="btn btn-outline-secondary me-md-2">
+                            <i class="fas fa-arrow-left me-2"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-save me-2"></i>Guardar Bebida
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Popular Drinks -->
+        <div class="card mt-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-star me-2"></i>Bebidas Populares</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-tint me-2"></i>Bebidas Sin Calorías</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success me-2"></i>Agua mineral (0 kcal/100ml)</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Té verde (1 kcal/100ml)</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Café negro (2 kcal/100ml)</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-exclamation-triangle me-2"></i>Bebidas Con Calorías</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-info text-warning me-2"></i>Coca-Cola (42 kcal/100ml)</li>
+                            <li><i class="fas fa-info text-warning me-2"></i>Zumo de naranja (45 kcal/100ml)</li>
+                            <li><i class="fas fa-info text-warning me-2"></i>Pepsi (41 kcal/100ml)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tips Section -->
+        <div class="card mt-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Consejos</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-tint me-2"></i>Hidratación</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success me-2"></i>Bebe al menos 2L de agua al día</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Evita bebidas azucaradas</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Prefiere té o café sin azúcar</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-calculator me-2"></i>Consejos de Medición</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-info text-info me-2"></i>Usa una taza medidora</li>
+                            <li><i class="fas fa-info text-info me-2"></i>Una taza = ~250ml</li>
+                            <li><i class="fas fa-info text-info me-2"></i>Una lata = ~330ml</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const drinkSelect = document.getElementById('drink');
+    const quantityInput = document.getElementById('quantity_ml');
+    const caloriePreview = document.getElementById('calorie-preview');
+    const selectedDrink = document.getElementById('selected-drink');
+    const selectedQuantity = document.getElementById('selected-quantity');
+    const calculatedCalories = document.getElementById('calculated-calories');
+    
+    function updateCaloriePreview() {
+        const selectedOption = drinkSelect.options[drinkSelect.selectedIndex];
+        const quantity = quantityInput.value;
+        
+        if (drinkSelect.value && quantity) {
+            const caloriesPer100ml = parseFloat(selectedOption.dataset.calories);
+            const totalCalories = (caloriesPer100ml * quantity) / 100;
+            
+            selectedDrink.textContent = selectedOption.text;
+            selectedQuantity.textContent = quantity;
+            calculatedCalories.textContent = Math.round(totalCalories);
+            
+            caloriePreview.style.display = 'block';
+        } else {
+            caloriePreview.style.display = 'none';
+        }
+    }
+    
+    drinkSelect.addEventListener('change', updateCaloriePreview);
+    quantityInput.addEventListener('input', updateCaloriePreview);
+});
+</script>
+{% endblock %} 

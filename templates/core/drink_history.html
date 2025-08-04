@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+
+{% block title %}Historial de Bebidas - Under1000k{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-glass-whiskey me-2"></i>Historial de Bebidas</h2>
+                <a href="{% url 'core:add_drink' %}" class="btn btn-warning">
+                    <i class="fas fa-plus me-2"></i>Agregar Bebida
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="date_from" class="form-label">Desde</label>
+                            <input type="date" class="form-control" id="date_from" name="date_from" 
+                                   value="{{ request.GET.date_from }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="date_to" class="form-label">Hasta</label>
+                            <input type="date" class="form-control" id="date_to" name="date_to" 
+                                   value="{{ request.GET.date_to }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="drink_category" class="form-label">Categoría</label>
+                            <select class="form-select" id="drink_category" name="drink_category">
+                                <option value="">Todas</option>
+                                {% for category in drink_categories %}
+                                <option value="{{ category.id }}" {% if request.GET.drink_category == category.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search me-2"></i>Filtrar
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-number">{{ total_drinks }}</div>
+                <div class="stat-label">Total Bebidas</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-number">{{ total_calories }}</div>
+                <div class="stat-label">Calorías Totales</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-number">{{ total_volume|floatformat:0 }}</div>
+                <div class="stat-label">Volumen Total (ml)</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-number">{{ days_count }}</div>
+                <div class="stat-label">Días Registrados</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Bebidas -->
+    <div class="row">
+        <div class="col-12">
+            {% if drinks %}
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Hora</th>
+                                        <th>Bebida</th>
+                                        <th>Cantidad</th>
+                                        <th>Calorías</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for drink in drinks %}
+                                    <tr>
+                                        <td>{{ drink.date|date:"d/m/Y" }}</td>
+                                        <td>{{ drink.time|time:"H:i" }}</td>
+                                        <td>
+                                            <strong>{{ drink.drink.name }}</strong>
+                                            <br><small class="text-muted">{{ drink.drink.category.name }}</small>
+                                        </td>
+                                        <td>{{ drink.quantity_ml }} ml</td>
+                                        <td>
+                                            <strong>{{ drink.total_calories }} kcal</strong>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-info" 
+                                                    onclick="showDrinkDetails({{ drink.id }})">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Paginación -->
+                        {% if drinks.has_other_pages %}
+                        <nav aria-label="Paginación de bebidas">
+                            <ul class="pagination justify-content-center">
+                                {% if drinks.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ drinks.previous_page_number }}&{{ request.GET.urlencode }}">
+                                            <i class="fas fa-chevron-left"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+
+                                {% for num in drinks.paginator.page_range %}
+                                    {% if drinks.number == num %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ num }}</span>
+                                        </li>
+                                    {% elif num > drinks.number|add:'-3' and num < drinks.number|add:'3' %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ num }}&{{ request.GET.urlencode }}">{{ num }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if drinks.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ drinks.next_page_number }}&{{ request.GET.urlencode }}">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    </div>
+                </div>
+            {% else %}
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-glass-whiskey fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">No hay bebidas registradas</h4>
+                        <p class="text-muted">Comienza agregando tu primera bebida</p>
+                        <a href="{% url 'core:add_drink' %}" class="btn btn-warning">
+                            <i class="fas fa-plus me-2"></i>Agregar Primera Bebida
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal para detalles de bebida -->
+<div class="modal fade" id="drinkDetailModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalles de Bebida</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="drinkDetailContent">
+                <!-- Contenido dinámico -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showDrinkDetails(drinkId) {
+    // Aquí podrías hacer una llamada AJAX para obtener los detalles
+    // Por ahora, solo cerramos el modal
+    $('#drinkDetailModal').modal('show');
+}
+</script>
+{% endblock %} 

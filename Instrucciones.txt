@@ -1,0 +1,58 @@
+Deseo crear un proyecto en Django, que se llame "under1000k" y es un App para contar calorías diarias, y establecer un objetivo de menos de 1000kcal.
+
+El App, será una WebApp, que se pueda usar en cualquier dispositivo, y que se pueda usar en cualquier navegador.
+Contará con una sección para registrar las comidas, registrar bebidas, y asi contar las calorías.
+
+El objetivo es tomar una foto de la comida, y que el App pueda reconocer el plato, y que pueda contar las calorías.
+
+Cada comida, bebida, o snack, se podrá registrar con una foto, y el App podrá reconocer el plato, y que pueda contar las calorías.
+
+Cada comida se guardará en la base de datos, y se podrá ver el historial de las comidas.
+
+Al final de cada día, se podrá ver el total de calorías consumidas, y se podrá ver el objetivo de calorías.
+
+El App usará el API de OpenAI, para reconocer el plato, y contar las calorías.
+
+Al final el App la desplegaremos en Render o en Vercel, que son servicios de hosting para aplicaciones web.
+
+Comencemos por crear un plan de trabajo, que incluya las siguientes secciones:
+
+1. Crear el proyecto en Django.
+2. Crear el modelo de datos.
+   - Modelo para las comidas.
+   - Modelo para las bebidas.
+   - Modeo de de datos donde se clasifiquen los alimentos en categorias.
+       - Categorias:
+           - Frutas
+           - Verduras
+           - Carnes
+           - Pescados
+           - Huevos
+           - Lacteos
+           - Legumbres
+           - Cereales
+           - Frutos secos
+           - Semillas
+           - Frutos de mar
+           - Mariscos
+           - Pescados
+   - Modelo para las bebidas.
+        - Categorias:
+            - Agua
+            - Bebidas azucaradas
+            - Bebidas sin azucar
+            - Bebidas alcohólicas
+            - Bebidas energéticas
+            - Bebidas deportivas
+    - Modelo de dato para los usuarios.
+    - Modelo de datos para los archivos de las fotos.
+    - Modelo de datos para los demas elementos que se puedan necesitar
+3. Crear la vista para registrar las comidas.
+4. Crear vista para ver el historial de las comidas.
+5. Crear un dashboard para ver balance general.
+
+El App debe tener una interfaz muy sencilla, minimalista y moderna, que sea facil de usar, y que sea facil de entender.
+Debemos usar iconos de font awesome, y debemos usar colores que sean agradables a la vista.
+
+
+Plantea el plan de trabajo pero no comencemos a programar hasta que no estemos de acuerdo en el plan de trabajo.

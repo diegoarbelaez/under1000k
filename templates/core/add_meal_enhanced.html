@@ -1,0 +1,783 @@
+{% extends 'base.html' %}
+
+{% block title %}Agregar Comida - Under1000k{% endblock %}
+
+{% block extra_css %}
+<style>
+    .step-indicator {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+    }
+    
+    .step {
+        flex: 1;
+        text-align: center;
+        padding: 1rem;
+        border-radius: 8px;
+        margin: 0 0.5rem;
+        position: relative;
+    }
+    
+    .step.active {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+    }
+    
+    .step.completed {
+        background-color: #28a745;
+        color: white;
+    }
+    
+    .step.pending {
+        background-color: #f8f9fa;
+        color: #6c757d;
+    }
+    
+    .upload-area {
+        border: 3px dashed #dee2e6;
+        border-radius: 12px;
+        padding: 3rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .upload-area:hover {
+        border-color: var(--primary-color);
+        background-color: #f8f9fa;
+    }
+    
+    .upload-area.dragover {
+        border-color: var(--primary-color);
+        background-color: #e3f2fd;
+    }
+    
+    .food-item, .drink-item {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .food-item:hover, .drink-item:hover {
+        border-color: var(--primary-color);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .calorie-counter {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+    
+    .confidence-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .confidence-high { background-color: #d4edda; color: #155724; }
+    .confidence-medium { background-color: #fff3cd; color: #856404; }
+    .confidence-low { background-color: #f8d7da; color: #721c24; }
+    
+    .loading-spinner {
+        display: none;
+    }
+    
+    .loading-spinner.show {
+        display: block;
+    }
+    
+    .manual-add-section {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .meal-type-card {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+    
+    .meal-type-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .meal-type-card.selected {
+        border-color: var(--primary-color);
+        background-color: #e3f2fd;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="container mt-4">
+    <!-- Step Indicator -->
+    <div class="step-indicator">
+        <div class="step active" id="step1">
+            <i class="fas fa-utensils fa-2x mb-2"></i>
+            <div><strong>1. Tipo de Comida</strong></div>
+        </div>
+        <div class="step pending" id="step2">
+            <i class="fas fa-camera fa-2x mb-2"></i>
+            <div><strong>2. Foto y Análisis</strong></div>
+        </div>
+        <div class="step pending" id="step3">
+            <i class="fas fa-edit fa-2x mb-2"></i>
+            <div><strong>3. Editar y Confirmar</strong></div>
+        </div>
+    </div>
+
+    <!-- Step 1: Select Meal Type -->
+    <div id="step1-content" class="step-content">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0"><i class="fas fa-utensils me-2"></i>Paso 1: Seleccionar Tipo de Comida</h4>
+                    </div>
+                    <div class="card-body">
+                        <form id="meal-type-form">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <div class="card meal-type-card" data-meal-type="breakfast">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-sun fa-3x text-warning mb-3"></i>
+                                            <h5>Desayuno</h5>
+                                            <small class="text-muted">7:00 - 10:00 AM</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="card meal-type-card" data-meal-type="lunch">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-cloud-sun fa-3x text-success mb-3"></i>
+                                            <h5>Almuerzo</h5>
+                                            <small class="text-muted">12:00 - 3:00 PM</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="card meal-type-card" data-meal-type="dinner">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-moon fa-3x text-info mb-3"></i>
+                                            <h5>Cena</h5>
+                                            <small class="text-muted">7:00 - 10:00 PM</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="card meal-type-card" data-meal-type="snack">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-cookie-bite fa-3x text-warning mb-3"></i>
+                                            <h5>Snack</h5>
+                                            <small class="text-muted">Entre comidas</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="notes" class="form-label">
+                                    <i class="fas fa-sticky-note me-2"></i>Notas (opcional)
+                                </label>
+                                <textarea name="notes" id="notes" class="form-control" rows="3" 
+                                          placeholder="Describe tu comida, ingredientes especiales, etc."></textarea>
+                            </div>
+                            
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <a href="{% url 'core:dashboard' %}" class="btn btn-outline-secondary me-md-2">
+                                    <i class="fas fa-arrow-left me-2"></i>Cancelar
+                                </a>
+                                <button type="button" class="btn btn-primary" id="next-to-step2" disabled>
+                                    <i class="fas fa-camera me-2"></i>Continuar con Foto
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 2: Photo and Analysis -->
+    <div id="step2-content" class="step-content" style="display: none;">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h4 class="mb-0"><i class="fas fa-camera me-2"></i>Paso 2: Foto y Análisis IA</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="upload-area" id="upload-area">
+                            <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                            <h5>Sube una foto de tu comida</h5>
+                            <p class="text-muted">Arrastra la imagen aquí o haz clic para seleccionar</p>
+                            <input type="file" id="food-image" accept="image/*" style="display: none;">
+                        </div>
+                        
+                        <!-- Debug button for testing -->
+                        <div class="text-center mt-3">
+                            <button type="button" class="btn btn-outline-info btn-sm" id="test-analysis">
+                                <i class="fas fa-flask me-2"></i>Probar con Datos Simulados
+                            </button>
+                        </div>
+                        
+                        <div class="loading-spinner text-center" id="loading-spinner">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Analizando...</span>
+                            </div>
+                            <p class="mt-2">Analizando imagen con IA...</p>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                            <button type="button" class="btn btn-outline-secondary me-md-2" id="back-to-step1">
+                                <i class="fas fa-arrow-left me-2"></i>Atrás
+                            </button>
+                            <button type="button" class="btn btn-success" id="next-to-step3" disabled>
+                                <i class="fas fa-edit me-2"></i>Editar Resultados
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 3: Edit and Confirm -->
+    <div id="step3-content" class="step-content" style="display: none;">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="card">
+                    <div class="card-header bg-warning text-white">
+                        <h4 class="mb-0"><i class="fas fa-edit me-2"></i>Paso 3: Editar y Confirmar</h4>
+                    </div>
+                    <div class="card-body">
+                        <!-- Calorie Counter -->
+                        <div class="calorie-counter">
+                            <h3>Total de Calorías: <span id="total-calories">0</span> kcal</h3>
+                            <p class="mb-0">Basado en los ingredientes detectados y agregados</p>
+                        </div>
+                        
+                        <!-- Detected Foods -->
+                        <div class="mb-4">
+                            <h5><i class="fas fa-utensils me-2"></i>Comidas Detectadas</h5>
+                            <div id="detected-foods">
+                                <!-- Foods will be populated here -->
+                            </div>
+                            <button type="button" class="btn btn-outline-success btn-sm" id="add-food-manual">
+                                <i class="fas fa-plus me-2"></i>Agregar Comida Manualmente
+                            </button>
+                        </div>
+                        
+                        <!-- Detected Drinks -->
+                        <div class="mb-4">
+                            <h5><i class="fas fa-glass-whiskey me-2"></i>Bebidas Detectadas</h5>
+                            <div id="detected-drinks">
+                                <!-- Drinks will be populated here -->
+                            </div>
+                            <button type="button" class="btn btn-outline-warning btn-sm" id="add-drink-manual">
+                                <i class="fas fa-plus me-2"></i>Agregar Bebida Manualmente
+                            </button>
+                        </div>
+                        
+                        <!-- Manual Add Section -->
+                        <div class="manual-add-section" id="manual-add-section" style="display: none;">
+                            <h6><i class="fas fa-plus-circle me-2"></i>Agregar Manualmente</h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <input type="text" class="form-control" id="manual-name" placeholder="Nombre del alimento/bebida">
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="number" class="form-control" id="manual-quantity" placeholder="Cantidad">
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-select" id="manual-unit">
+                                        <option value="g">gramos</option>
+                                        <option value="ml">mililitros</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="button" class="btn btn-primary btn-sm" id="add-manual-item">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <button type="button" class="btn btn-outline-secondary me-md-2" id="back-to-step2">
+                                <i class="fas fa-arrow-left me-2"></i>Atrás
+                            </button>
+                            <button type="button" class="btn btn-success" id="save-meal">
+                                <i class="fas fa-save me-2"></i>Guardar Comida
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for manual item selection -->
+<div class="modal fade" id="manualItemModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Seleccionar Alimento/Bebida</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Comidas</h6>
+                        <div id="food-list">
+                            <!-- Foods will be populated here -->
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Bebidas</h6>
+                        <div id="drink-list">
+                            <!-- Drinks will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentStep = 1;
+let selectedMealType = '';
+let selectedNotes = '';
+let detectedItems = [];
+let manualItems = [];
+let totalCalories = 0;
+
+// Step 1: Meal Type Selection
+document.querySelectorAll('.meal-type-card').forEach(card => {
+    card.addEventListener('click', function() {
+        document.querySelectorAll('.meal-type-card').forEach(c => c.classList.remove('selected'));
+        this.classList.add('selected');
+        selectedMealType = this.dataset.mealType;
+        document.getElementById('next-to-step2').disabled = false;
+    });
+});
+
+document.getElementById('next-to-step2').addEventListener('click', function() {
+    selectedNotes = document.getElementById('notes').value;
+    showStep(2);
+});
+
+// Step 2: Photo Upload and Analysis
+const uploadArea = document.getElementById('upload-area');
+const fileInput = document.getElementById('food-image');
+
+uploadArea.addEventListener('click', () => fileInput.click());
+uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.classList.add('dragover');
+});
+uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        handleFile(files[0]);
+    }
+});
+
+fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+        handleFile(e.target.files[0]);
+    }
+});
+
+// Test analysis button
+document.getElementById('test-analysis').addEventListener('click', () => {
+    // Simulate API response with test data
+    const testData = {
+        success: true,
+        items: [
+            {
+                type: 'food',
+                name: 'Salchicha',
+                quantity: 150,
+                unit: 'g',
+                calories: 450,
+                confidence: 0.9
+            },
+            {
+                type: 'food',
+                name: 'Papas Asadas',
+                quantity: 100,
+                unit: 'g',
+                calories: 200,
+                confidence: 0.9
+            },
+            {
+                type: 'food',
+                name: 'Pollo Asado',
+                quantity: 100,
+                unit: 'g',
+                calories: 165,
+                confidence: 0.8
+            },
+            {
+                type: 'food',
+                name: 'Ensalada con Huevo y Queso',
+                quantity: 150,
+                unit: 'g',
+                calories: 300,
+                confidence: 0.8
+            },
+            {
+                type: 'drink',
+                name: 'Limonada',
+                quantity: 200,
+                unit: 'ml',
+                calories: 80,
+                confidence: 0.6
+            }
+        ],
+        total_calories: 1195,
+        analysis_confidence: 0.8
+    };
+    
+    // Show loading
+    document.getElementById('loading-spinner').classList.add('show');
+    uploadArea.style.display = 'none';
+    
+    // Simulate processing time
+    setTimeout(() => {
+        detectedItems = testData.items;
+        showAnalysisSuccess(testData.items.length, testData.total_calories);
+        updateCalorieDisplay();
+        populateDetectedItems();
+        
+        // Enable next step button
+        document.getElementById('next-to-step3').disabled = false;
+        
+        // Auto-advance to step 3 after 2 seconds
+        setTimeout(() => {
+            showStep(3);
+        }, 2000);
+        
+        document.getElementById('loading-spinner').classList.remove('show');
+    }, 2000);
+});
+
+function handleFile(file) {
+    if (!file.type.startsWith('image/')) {
+        alert('Por favor selecciona una imagen válida');
+        return;
+    }
+    
+    // Show loading
+    document.getElementById('loading-spinner').classList.add('show');
+    uploadArea.style.display = 'none';
+    
+    // Real AI analysis
+    const formData = new FormData();
+    formData.append('image', file);
+    
+    fetch('{% url "core:api_analyze_image_enhanced" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('API Response:', data); // Debug
+        
+        if (data.success) {
+            detectedItems = data.items || [];
+            
+            // Debug: Log detected items
+            console.log('Detected Items:', detectedItems);
+            
+            // Show success message
+            showAnalysisSuccess(data.items.length, data.total_calories);
+            
+            updateCalorieDisplay();
+            populateDetectedItems();
+            
+            // Enable next step button
+            document.getElementById('next-to-step3').disabled = false;
+            
+            // Auto-advance to step 3 after 2 seconds
+            setTimeout(() => {
+                showStep(3);
+            }, 2000);
+            
+        } else {
+            showAnalysisError(data.error);
+        }
+        
+        document.getElementById('loading-spinner').classList.remove('show');
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAnalysisError('Error al analizar la imagen');
+        document.getElementById('loading-spinner').classList.remove('show');
+    });
+}
+
+function showAnalysisSuccess(itemCount, totalCalories) {
+    const successDiv = document.createElement('div');
+    successDiv.className = 'alert alert-success text-center';
+    successDiv.innerHTML = `
+        <i class="fas fa-check-circle fa-2x mb-2"></i>
+        <h5>¡Análisis Completado!</h5>
+        <p>Se detectaron ${itemCount} ingredientes con ${totalCalories} calorías totales</p>
+        <small>Redirigiendo al paso 3...</small>
+    `;
+    
+    // Replace loading spinner with success message
+    const loadingSpinner = document.getElementById('loading-spinner');
+    loadingSpinner.innerHTML = '';
+    loadingSpinner.appendChild(successDiv);
+}
+
+function showAnalysisError(error) {
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'alert alert-danger text-center';
+    errorDiv.innerHTML = `
+        <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+        <h5>Error en el Análisis</h5>
+        <p>${error}</p>
+        <button class="btn btn-outline-danger btn-sm" onclick="location.reload()">
+            <i class="fas fa-redo me-2"></i>Intentar de Nuevo
+        </button>
+    `;
+    
+    // Replace loading spinner with error message
+    const loadingSpinner = document.getElementById('loading-spinner');
+    loadingSpinner.innerHTML = '';
+    loadingSpinner.appendChild(errorDiv);
+}
+
+// Step 3: Edit and Confirm
+document.getElementById('next-to-step3').addEventListener('click', () => {
+    showStep(3);
+});
+
+function showStep(step) {
+    // Hide all step contents
+    document.querySelectorAll('.step-content').forEach(content => {
+        content.style.display = 'none';
+    });
+    
+    // Show selected step content
+    document.getElementById(`step${step}-content`).style.display = 'block';
+    
+    // Update step indicators
+    document.querySelectorAll('.step').forEach((stepEl, index) => {
+        stepEl.classList.remove('active', 'completed', 'pending');
+        if (index + 1 < step) {
+            stepEl.classList.add('completed');
+        } else if (index + 1 === step) {
+            stepEl.classList.add('active');
+        } else {
+            stepEl.classList.add('pending');
+        }
+    });
+    
+    currentStep = step;
+}
+
+function updateCalorieDisplay() {
+    console.log('Updating calorie display...'); // Debug
+    console.log('Detected Items:', detectedItems); // Debug
+    console.log('Manual Items:', manualItems); // Debug
+    
+    totalCalories = [...detectedItems, ...manualItems].reduce((sum, item) => {
+        const calories = parseFloat(item.calories) || 0;
+        console.log(`Item: ${item.name}, Calories: ${calories}`); // Debug
+        return sum + calories;
+    }, 0);
+    
+    console.log('Total Calories:', totalCalories); // Debug
+    document.getElementById('total-calories').textContent = totalCalories;
+}
+
+function populateDetectedItems() {
+    const foodsContainer = document.getElementById('detected-foods');
+    const drinksContainer = document.getElementById('detected-drinks');
+    
+    foodsContainer.innerHTML = '';
+    drinksContainer.innerHTML = '';
+    
+    detectedItems.forEach((item, index) => {
+        const itemElement = createItemElement(item, index, 'detected');
+        if (item.type === 'food') {
+            foodsContainer.appendChild(itemElement);
+        } else {
+            drinksContainer.appendChild(itemElement);
+        }
+    });
+}
+
+function createItemElement(item, index, source) {
+    console.log('Creating item element:', item); // Debug
+    
+    const div = document.createElement('div');
+    div.className = item.type === 'food' ? 'food-item' : 'drink-item';
+    
+    // Ensure calories is a number
+    const calories = parseFloat(item.calories) || 0;
+    const confidence = parseFloat(item.confidence) || 0;
+    
+    div.innerHTML = `
+        <div>
+            <h6 class="mb-1">${item.name}</h6>
+            <small class="text-muted">${item.quantity} ${item.unit}</small>
+            ${source === 'detected' ? `<br><span class="confidence-badge confidence-${getConfidenceClass(confidence)}">${Math.round(confidence * 100)}% confianza</span>` : ''}
+        </div>
+        <div class="text-end">
+            <span class="badge bg-${item.type === 'food' ? 'success' : 'warning'}">${calories} kcal</span>
+            <button type="button" class="btn btn-sm btn-outline-danger ms-2" onclick="removeItem(${index}, '${source}')">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    `;
+    return div;
+}
+
+function getConfidenceClass(confidence) {
+    if (confidence >= 0.8) return 'high';
+    if (confidence >= 0.6) return 'medium';
+    return 'low';
+}
+
+function removeItem(index, source) {
+    if (source === 'detected') {
+        detectedItems.splice(index, 1);
+        populateDetectedItems();
+    } else {
+        manualItems.splice(index, 1);
+        populateManualItems();
+    }
+    updateCalorieDisplay();
+}
+
+// Navigation buttons
+document.getElementById('back-to-step1').addEventListener('click', () => showStep(1));
+document.getElementById('back-to-step2').addEventListener('click', () => showStep(2));
+
+// Manual item addition
+document.getElementById('add-food-manual').addEventListener('click', () => {
+    document.getElementById('manual-add-section').style.display = 'block';
+    document.getElementById('manual-unit').value = 'g';
+});
+
+document.getElementById('add-drink-manual').addEventListener('click', () => {
+    document.getElementById('manual-add-section').style.display = 'block';
+    document.getElementById('manual-unit').value = 'ml';
+});
+
+document.getElementById('add-manual-item').addEventListener('click', () => {
+    const name = document.getElementById('manual-name').value;
+    const quantity = parseFloat(document.getElementById('manual-quantity').value);
+    const unit = document.getElementById('manual-unit').value;
+    
+    if (!name || !quantity) {
+        alert('Por favor completa todos los campos');
+        return;
+    }
+    
+    // Calculate estimated calories (simplified)
+    const calories = unit === 'g' ? quantity * 1.2 : quantity * 0.4;
+    
+    const newItem = {
+        type: unit === 'g' ? 'food' : 'drink',
+        name: name,
+        quantity: quantity,
+        unit: unit,
+        calories: Math.round(calories),
+        confidence: 1.0
+    };
+    
+    manualItems.push(newItem);
+    populateManualItems();
+    updateCalorieDisplay();
+    
+    // Clear form
+    document.getElementById('manual-name').value = '';
+    document.getElementById('manual-quantity').value = '';
+    document.getElementById('manual-add-section').style.display = 'none';
+});
+
+function populateManualItems() {
+    const foodsContainer = document.getElementById('detected-foods');
+    const drinksContainer = document.getElementById('detected-drinks');
+    
+    manualItems.forEach((item, index) => {
+        const itemElement = createItemElement(item, index, 'manual');
+        if (item.type === 'food') {
+            foodsContainer.appendChild(itemElement);
+        } else {
+            drinksContainer.appendChild(itemElement);
+        }
+    });
+}
+
+// Save meal
+document.getElementById('save-meal').addEventListener('click', function() {
+    if (totalCalories === 0) {
+        alert('Por favor agrega al menos un alimento o bebida');
+        return;
+    }
+    
+    // Prepare data for saving
+    const mealData = {
+        meal_type: selectedMealType,
+        notes: selectedNotes,
+        total_calories: totalCalories,
+        items: [...detectedItems, ...manualItems]
+    };
+    
+    // Send to server
+    fetch('{% url "core:api_save_meal" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify(mealData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = '{% url "core:dashboard" %}';
+        } else {
+            alert('Error al guardar la comida: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al guardar la comida');
+    });
+});
+</script>
+{% endblock %} 
