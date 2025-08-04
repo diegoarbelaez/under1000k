@@ -5,11 +5,6 @@ set -o errexit
 pip install -r requirements.txt
 
 python manage.py collectstatic --no-input
-python manage.py migrate
 
-# Poblar categorías y datos de ejemplo
-python manage.py populate_categories
-python manage.py populate_sample_data
-
-# Crear superusuario para el admin
-python manage.py create_superuser 
+# Configuración completa de la base de datos
+python manage.py setup_production 
