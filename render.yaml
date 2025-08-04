@@ -21,4 +21,12 @@ services:
       - key: MEDIA_ROOT
         value: media
       - key: MEDIA_URL
-        value: /media/ 
+        value: /media/
+      - key: CSRF_COOKIE_SECURE
+        value: false
+      - key: SESSION_COOKIE_SECURE
+        value: false
+      - key: CSRF_COOKIE_SAMESITE
+        value: Lax
+      - key: SESSION_COOKIE_SAMESITE
+        value: Lax 

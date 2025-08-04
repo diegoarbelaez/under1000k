@@ -13,4 +13,7 @@ python manage.py setup_production
 python manage.py check_auth
 
 # Test de login
-python manage.py test_login 
+python manage.py test_login
+
+# Verificar CSRF
+python manage.py check_csrf 

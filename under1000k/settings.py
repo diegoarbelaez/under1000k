@@ -144,6 +144,20 @@ STATICFILES_DIRS = [
 MEDIA_URL = config('MEDIA_URL', default='/media/')
 MEDIA_ROOT = BASE_DIR / config('MEDIA_ROOT', default='media')
 
+# CSRF and Session settings for production
+CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=False, cast=bool)
+CSRF_COOKIE_HTTPONLY = config('CSRF_COOKIE_HTTPONLY', default=True, cast=bool)
+CSRF_COOKIE_SAMESITE = config('CSRF_COOKIE_SAMESITE', default='Lax')
+
+# Session settings
+SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=False, cast=bool)
+SESSION_COOKIE_HTTPONLY = config('SESSION_COOKIE_HTTPONLY', default=True, cast=bool)
+SESSION_COOKIE_SAMESITE = config('SESSION_COOKIE_SAMESITE', default='Lax')
+
+# Security settings
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+
 # OpenAI API Key
 OPENAI_API_KEY = config('OPENAI_API_KEY', default='')
 
