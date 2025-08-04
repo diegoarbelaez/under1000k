@@ -26,7 +26,17 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-rddi%yt4k%(mq_+x@$me3
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
+# Get ALLOWED_HOSTS from environment or use a default
+ALLOWED_HOSTS_STR = config('ALLOWED_HOSTS', default='localhost,127.0.0.1')
+ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS_STR.split(',') if host.strip()]
+
+# Add the current domain to ALLOWED_HOSTS if we're in production
+if not DEBUG:
+    import os
+    # Get the current domain from environment
+    current_domain = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+    if current_domain and current_domain not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(current_domain)
 
 
 # Application definition
