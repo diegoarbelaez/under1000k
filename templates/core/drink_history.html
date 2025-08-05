@@ -66,7 +66,7 @@
         </div>
         <div class="col-md-3">
             <div class="stat-card">
-                <div class="stat-number">{{ total_calories }}</div>
+                <div class="stat-number">{{ total_calories|floatformat:1 }}</div>
                 <div class="stat-label">Calorías Totales</div>
             </div>
         </div>
@@ -113,7 +113,7 @@
                                         </td>
                                         <td>{{ drink.quantity_ml }} ml</td>
                                         <td>
-                                            <strong>{{ drink.total_calories }} kcal</strong>
+                                            <strong>{{ drink.total_calories|floatformat:1 }} kcal</strong>
                                         </td>
                                         <td>
                                             <button class="btn btn-sm btn-outline-info" 
