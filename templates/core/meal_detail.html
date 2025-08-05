@@ -33,7 +33,7 @@
                                 <li><strong>Fecha:</strong> {{ meal.date|date:"d/m/Y" }}</li>
                                 <li><strong>Hora:</strong> {{ meal.time|time:"H:i" }}</li>
                                 <li><strong>Calorías Totales:</strong> 
-                                    <span class="badge bg-success">{{ meal.total_calories }} kcal</span>
+                                    <span class="badge bg-success">{{ meal.total_calories|floatformat:1 }} kcal</span>
                                 </li>
                                 {% if meal.notes %}
                                     <li><strong>Notas:</strong> {{ meal.notes }}</li>
@@ -68,7 +68,7 @@
                                     <tr>
                                         <td>{{ detail.food.name }}</td>
                                         <td>{{ detail.quantity_grams }}g</td>
-                                        <td>{{ detail.calories }} kcal</td>
+                                        <td>{{ detail.calories|floatformat:1 }} kcal</td>
                                         <td>
                                             <div class="progress" style="height: 20px;">
                                                 <div class="progress-bar" role="progressbar" 
@@ -113,7 +113,7 @@
                 </div>
                 <div class="card-body">
                     <div class="text-center mb-3">
-                        <div class="display-6 text-success">{{ meal.total_calories }}</div>
+                        <div class="display-6 text-success">{{ meal.total_calories|floatformat:1 }}</div>
                         <small class="text-muted">calorías totales</small>
                     </div>
                     
@@ -123,7 +123,7 @@
                             {% for detail in meal.meal_details.all %}
                             <div class="d-flex justify-content-between mb-1">
                                 <span>{{ detail.food.name }}</span>
-                                <span>{{ detail.calories }} kcal</span>
+                                <span>{{ detail.calories|floatformat:1 }} kcal</span>
                             </div>
                             {% endfor %}
                         </div>

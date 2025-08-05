@@ -14,7 +14,7 @@
     <div class="row mb-4">
         <div class="col-md-3">
             <div class="stat-card">
-                <div class="stat-number">{{ total_calories }}</div>
+                <div class="stat-number">{{ total_calories|floatformat:1 }}</div>
                 <div class="stat-label">Calorías Totales</div>
             </div>
         </div>
@@ -58,14 +58,14 @@
 
                     <div class="mb-3">
                         <h6 class="text-muted">Promedio de Calorías por Comida</h6>
-                        <div class="display-6 text-success">{{ avg_meal_calories|floatformat:0 }} kcal</div>
+                        <div class="display-6 text-success">{{ avg_meal_calories|floatformat:1 }} kcal</div>
                     </div>
 
                     <div class="mb-3">
                         <h6 class="text-muted">Día con Más Calorías</h6>
                         <div class="d-flex justify-content-between">
                             <span>{{ max_calories_date|date:"d/m/Y" }}</span>
-                            <span class="badge bg-warning">{{ max_calories }} kcal</span>
+                            <span class="badge bg-warning">{{ max_calories|floatformat:1 }} kcal</span>
                         </div>
                     </div>
                 </div>
@@ -90,7 +90,7 @@
 
                     <div class="mb-3">
                         <h6 class="text-muted">Promedio de Calorías por Bebida</h6>
-                        <div class="display-6 text-warning">{{ avg_drink_calories|floatformat:0 }} kcal</div>
+                        <div class="display-6 text-warning">{{ avg_drink_calories|floatformat:1 }} kcal</div>
                     </div>
 
                     {% if top_drinks %}
@@ -132,7 +132,7 @@
                                 {% for week in weekly_trends %}
                                 <tr>
                                     <td>{{ week.week_start|date:"d/m/Y" }} - {{ week.week_end|date:"d/m/Y" }}</td>
-                                    <td><strong>{{ week.total_calories }} kcal</strong></td>
+                                    <td><strong>{{ week.total_calories|floatformat:1 }} kcal</strong></td>
                                     <td>{{ week.avg_daily|floatformat:0 }} kcal</td>
                                     <td>{{ week.days_count }}/7</td>
                                     <td>

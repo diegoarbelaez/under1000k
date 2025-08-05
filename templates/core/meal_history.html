@@ -65,13 +65,13 @@
         </div>
         <div class="col-md-3">
             <div class="stat-card">
-                <div class="stat-number">{{ total_calories }}</div>
+                <div class="stat-number">{{ total_calories|floatformat:1 }}</div>
                 <div class="stat-label">Calorías Totales</div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="stat-card">
-                <div class="stat-number">{{ avg_calories|floatformat:0 }}</div>
+                <div class="stat-number">{{ avg_calories|floatformat:1 }}</div>
                 <div class="stat-label">Promedio por Comida</div>
             </div>
         </div>
@@ -110,7 +110,7 @@
                                             <span class="badge bg-success">{{ meal.get_meal_type_display }}</span>
                                         </td>
                                         <td>
-                                            <strong>{{ meal.total_calories }} kcal</strong>
+                                            <strong>{{ meal.total_calories|floatformat:1 }} kcal</strong>
                                         </td>
                                         <td>
                                             {% if meal.analysis_completed %}
