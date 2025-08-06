@@ -15,6 +15,10 @@ urlpatterns = [
     path('meal/<int:meal_id>/', views.meal_detail, name='meal_detail'),
     path('meal-history/', views.meal_history, name='meal_history'),
     
+    # Quick meal capture
+    path('quick/', views.quick_meal_capture, name='quick_meal_capture'),
+    path('quick/summary/<int:analysis_id>/', views.quick_meal_summary, name='quick_meal_summary'),
+    
     # Gestión de bebidas
     path('add-drink/', views.add_drink, name='add_drink'),
     path('drink-history/', views.drink_history, name='drink_history'),
@@ -28,4 +32,5 @@ urlpatterns = [
     path('api/analyze-image-enhanced/', views.api_analyze_image_enhanced, name='api_analyze_image_enhanced'),
     path('api/save-meal/', views.api_save_meal, name='api_save_meal'),
     path('api/food-suggestions/', views.api_food_suggestions, name='api_food_suggestions'),
+    path('api/quick-save-meal/', views.api_quick_save_meal, name='api_quick_save_meal'),
 ] 

@@ -430,6 +430,58 @@ def statistics(request):
 
 # API Views para AJAX
 @login_required
+def quick_meal_capture(request):
+    """Vista minimalista para captura rápida de comidas"""
+    return render(request, 'core/quick_meal_capture.html')
+
+
+@login_required
+def quick_meal_summary(request, analysis_id):
+    """Vista de resumen para análisis rápido de comidas"""
+    try:
+        analysis = get_object_or_404(OpenAIAnalysis, id=analysis_id, image__user=request.user)
+        
+        # Procesar datos del análisis para mostrar
+        # Los datos están en response_received (JSON string) y identified_foods (JSON field)
+        try:
+            response_data = json.loads(analysis.response_received) if analysis.response_received else {}
+        except:
+            response_data = {}
+        
+        identified_foods = analysis.identified_foods if isinstance(analysis.identified_foods, list) else []
+        
+        # Formatear items para la vista
+        items = []
+        for food_data in identified_foods:
+            # Calcular calorías por alimento
+            grams = food_data.get('estimated_grams', 0)
+            cal_per_100g = food_data.get('calories_per_100g', 0)
+            calories = (grams * cal_per_100g) / 100 if grams and cal_per_100g else 0
+            
+            items.append({
+                'name': food_data.get('name', 'Alimento desconocido'),
+                'quantity': grams,
+                'calories': int(calories),
+                'confidence': int(food_data.get('confidence', 0.5) * 100)
+            })
+        
+        context = {
+            'analysis': analysis,
+            'items': items,
+            'total_calories': int(float(analysis.calculated_calories)),
+            'analysis_confidence': int(float(analysis.confidence_score) * 100),
+            'notes': response_data.get('notes', '')
+        }
+        
+        return render(request, 'core/quick_meal_summary.html', context)
+        
+    except Exception as e:
+        logger.error(f"Error en resumen rápido: {e}")
+        messages.error(request, 'Error al cargar el análisis. Inténtalo de nuevo.')
+        return redirect('core:quick_meal_capture')
+
+
+@login_required
 @csrf_exempt
 @require_http_methods(["POST"])
 def api_analyze_image(request):
@@ -632,3 +684,81 @@ def api_food_suggestions(request):
     ]
     
     return JsonResponse({'suggestions': suggestions})
+
+
+@login_required
+@csrf_exempt
+@require_http_methods(["POST"])
+def api_quick_save_meal(request):
+    """API para guardar comida desde análisis rápido"""
+    try:
+        analysis_id = request.POST.get('analysis_id')
+        if not analysis_id:
+            return JsonResponse({'success': False, 'error': 'ID de análisis requerido'})
+        
+        analysis = get_object_or_404(OpenAIAnalysis, id=analysis_id, image__user=request.user)
+        
+        # Obtener datos del análisis
+        try:
+            response_data = json.loads(analysis.response_received) if analysis.response_received else {}
+        except:
+            response_data = {}
+        
+        identified_foods = analysis.identified_foods if isinstance(analysis.identified_foods, list) else []
+        
+        # Crear registro de comida
+        meal = MealRecord.objects.create(
+            user=request.user,
+            date=timezone.now().date(),
+            meal_type='other',
+            total_calories=analysis.calculated_calories,
+            image=analysis.image,
+            notes=f"Análisis rápido - {response_data.get('notes', '')}"
+        )
+        
+        # Crear detalles de la comida
+        for food_data in identified_foods:
+            # Calcular calorías por alimento
+            grams = food_data.get('estimated_grams', 0)
+            cal_per_100g = food_data.get('calories_per_100g', 0)
+            calories = (grams * cal_per_100g) / 100 if grams and cal_per_100g else 0
+            food_name = food_data.get('name', 'Alimento desconocido')
+            
+            # Buscar o crear alimento
+            food, created = Food.objects.get_or_create(
+                name=food_name,
+                defaults={
+                    'category': FoodCategory.objects.first(),  # Usar primera categoría por defecto
+                    'calories_per_100g': cal_per_100g if cal_per_100g > 0 else 100
+                }
+            )
+            
+            # Crear detalle de comida con los nombres de campo correctos
+            MealDetail.objects.create(
+                meal_record=meal,  # Nombre correcto del campo
+                food=food,         # ForeignKey al objeto Food
+                quantity_g=grams,  # Nombre correcto del campo
+                calculated_calories=calories,  # Nombre correcto del campo
+                confidence=food_data.get('confidence', 0.5)
+            )
+        
+        # Registrar actividad
+        ActivityLog.objects.create(
+            user=request.user,
+            action='quick_meal_saved',
+            details={
+                'meal_id': meal.id,
+                'analysis_id': analysis.id,
+                'total_calories': float(meal.total_calories)
+            }
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'meal_id': meal.id,
+            'message': 'Comida guardada exitosamente'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error guardando comida rápida: {e}")
+        return JsonResponse({'success': False, 'error': str(e)})

@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+
+{% block title %}Quick - Resumen{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card border-0 shadow-lg">
+            <div class="card-body p-4">
+                <!-- Header -->
+                <div class="text-center mb-4">
+                    <i class="fas fa-check-circle text-success" style="font-size: 3rem;"></i>
+                    <h3 class="card-title mt-3 fw-bold text-primary">Análisis Completado</h3>
+                    <p class="text-muted">Revisa los resultados y confirma para guardar</p>
+                </div>
+
+                <!-- Image Preview -->
+                {% if analysis.image %}
+                <div class="text-center mb-4">
+                    <img src="{{ analysis.image.image.url }}" alt="Imagen analizada" 
+                         class="img-fluid rounded shadow-sm" style="max-height: 200px;">
+                </div>
+                {% endif %}
+
+                <!-- Total Calories -->
+                <div class="calorie-summary text-center mb-4 p-3 rounded" 
+                     style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white;">
+                    <h2 class="mb-1 fw-bold">{{ total_calories|floatformat:0 }} kcal</h2>
+                    <p class="mb-0 opacity-75">Total estimado</p>
+                </div>
+
+                <!-- Food Items -->
+                <div class="food-items mb-4">
+                    <h5 class="mb-3 fw-semibold">
+                        <i class="fas fa-utensils me-2 text-primary"></i>Alimentos Identificados
+                    </h5>
+                    {% for item in items %}
+                    <div class="food-item d-flex justify-content-between align-items-center p-3 mb-2 rounded" 
+                         style="background-color: #f8fafc; border-left: 4px solid var(--primary-color);">
+                        <div>
+                            <h6 class="mb-1 fw-semibold">{{ item.name }}</h6>
+                            <small class="text-muted">{{ item.quantity|floatformat:0 }}g</small>
+                            <div class="mt-1">
+                                <div class="confidence-bar">
+                                    <div class="progress" style="height: 4px;">
+                                        <div class="progress-bar bg-success" role="progressbar" 
+                                             style="width: {{ item.confidence }}%"></div>
+                                    </div>
+                                    <small class="text-muted">Confianza: {{ item.confidence }}%</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <span class="fw-bold text-primary">{{ item.calories|floatformat:0 }} kcal</span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-search me-2"></i>No se identificaron alimentos específicos
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Analysis Confidence -->
+                <div class="analysis-confidence mb-4 p-3 rounded" style="background-color: #f0f9ff;">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="fw-semibold text-primary">
+                            <i class="fas fa-brain me-2"></i>Confianza del Análisis
+                        </span>
+                        <span class="fw-bold">{{ analysis_confidence }}%</span>
+                    </div>
+                    <div class="progress mt-2" style="height: 6px;">
+                        <div class="progress-bar bg-primary" role="progressbar" 
+                             style="width: {{ analysis_confidence }}%"></div>
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                {% if notes %}
+                <div class="notes mb-4 p-3 rounded" style="background-color: #fef3c7;">
+                    <h6 class="fw-semibold text-warning-emphasis">
+                        <i class="fas fa-sticky-note me-2"></i>Notas del Análisis
+                    </h6>
+                    <p class="mb-0 text-warning-emphasis">{{ notes }}</p>
+                </div>
+                {% endif %}
+
+                <!-- Action Buttons -->
+                <div class="action-buttons d-grid gap-2 d-md-flex justify-content-md-center">
+                    <button type="button" class="btn btn-success btn-lg px-4" id="confirmBtn">
+                        <i class="fas fa-check me-2"></i>Confirmar y Guardar
+                    </button>
+                    <a href="{% url 'core:quick_meal_capture' %}" class="btn btn-outline-secondary btn-lg px-4">
+                        <i class="fas fa-arrow-left me-2"></i>Regresar
+                    </a>
+                </div>
+
+                <!-- Loading State -->
+                <div id="savingState" class="text-center" style="display: none;">
+                    <div class="spinner-border text-success mb-3" role="status">
+                        <span class="visually-hidden">Guardando...</span>
+                    </div>
+                    <p class="text-muted">Guardando tu comida...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmBtn = document.getElementById('confirmBtn');
+    const savingState = document.getElementById('savingState');
+    const actionButtons = document.querySelector('.action-buttons');
+
+    confirmBtn.addEventListener('click', async () => {
+        // Show loading state
+        actionButtons.style.display = 'none';
+        savingState.style.display = 'block';
+
+        try {
+            const formData = new FormData();
+            formData.append('analysis_id', '{{ analysis.id }}');
+
+            const response = await fetch('{% url "core:api_quick_save_meal" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Show success message and redirect
+                alert('¡Comida guardada exitosamente!');
+                window.location.href = '{% url "core:dashboard" %}';
+            } else {
+                throw new Error(data.error || 'Error al guardar');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error al guardar la comida. Inténtalo de nuevo.');
+            
+            // Reset to action buttons
+            savingState.style.display = 'none';
+            actionButtons.style.display = 'block';
+        }
+    });
+});
+</script>
+{% endblock %} 
