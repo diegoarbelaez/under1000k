@@ -84,22 +84,30 @@
                         </div>
                     {% endif %}
 
-                    {% if meal.food_images.all %}
+                    {% if meal.image %}
                         <hr>
-                        <h6 class="text-muted">Imágenes del Análisis</h6>
+                        <h6 class="text-muted">
+                            <i class="fas fa-camera me-2"></i>Imagen del Análisis
+                        </h6>
                         <div class="row">
-                            {% for image in meal.food_images.all %}
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-6">
                                 <div class="card">
-                                    <img src="{{ image.image.url }}" class="card-img-top" alt="Imagen de comida">
+                                    <img src="{{ meal.image.image.url }}" class="card-img-top" 
+                                         alt="Imagen de comida" style="max-height: 300px; object-fit: cover;">
                                     <div class="card-body">
-                                        <small class="text-muted">
-                                            Subida: {{ image.created_at|date:"d/m/Y H:i" }}
-                                        </small>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <small class="text-muted">
+                                                <i class="fas fa-clock me-1"></i>
+                                                {{ meal.image.created_at|date:"d/m/Y H:i" }}
+                                            </small>
+                                            <small class="text-muted">
+                                                <i class="fas fa-file me-1"></i>
+                                                {{ meal.image.original_name }}
+                                            </small>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            {% endfor %}
                         </div>
                     {% endif %}
                 </div>

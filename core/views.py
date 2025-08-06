@@ -527,6 +527,9 @@ def api_save_meal(request):
         notes = data.get('notes', '')
         total_calories = data.get('total_calories', 0)
         items = data.get('items', [])
+        custom_date = data.get('custom_date')
+        custom_time = data.get('custom_time')
+        analysis_id = data.get('analysis_id')
         
         # Validar datos
         if not meal_type:
@@ -535,13 +538,44 @@ def api_save_meal(request):
         if total_calories <= 0:
             return JsonResponse({'success': False, 'error': 'Calorías totales deben ser mayores a 0'})
         
-        # Crear registro de comida
-        meal = MealRecord.objects.create(
-            user=request.user,
-            meal_type=meal_type,
-            notes=notes,
-            total_calories=total_calories
-        )
+        # Obtener la imagen si existe un análisis
+        food_image = None
+        if analysis_id:
+            try:
+                analysis = OpenAIAnalysis.objects.get(id=analysis_id, image__user=request.user)
+                food_image = analysis.image
+            except OpenAIAnalysis.DoesNotExist:
+                pass  # Continuar sin imagen si no se encuentra el análisis
+        
+        # Procesar fecha y hora personalizadas
+        from datetime import datetime
+        if custom_date and custom_time:
+            try:
+                # Combinar fecha y hora
+                date_time_str = f"{custom_date} {custom_time}"
+                custom_datetime = datetime.strptime(date_time_str, "%Y-%m-%d %H:%M")
+                
+                # Crear registro de comida con fecha personalizada
+                meal = MealRecord.objects.create(
+                    user=request.user,
+                    meal_type=meal_type,
+                    notes=notes,
+                    total_calories=total_calories,
+                    date=custom_datetime.date(),
+                    time=custom_datetime.time(),
+                    image=food_image
+                )
+            except ValueError as e:
+                return JsonResponse({'success': False, 'error': f'Formato de fecha/hora inválido: {str(e)}'})
+        else:
+            # Crear registro de comida con fecha actual
+            meal = MealRecord.objects.create(
+                user=request.user,
+                meal_type=meal_type,
+                notes=notes,
+                total_calories=total_calories,
+                image=food_image
+            )
         
         # Procesar items detectados y manuales
         for item in items:

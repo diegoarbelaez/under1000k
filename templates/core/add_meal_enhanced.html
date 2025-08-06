@@ -322,6 +322,9 @@
                             <button type="button" class="btn btn-outline-secondary me-md-2" id="back-to-step2">
                                 <i class="fas fa-arrow-left me-2"></i>Atrás
                             </button>
+                            <button type="button" class="btn btn-outline-warning me-md-2" id="save-for-later">
+                                <i class="fas fa-clock me-2"></i>Guardar para Otro Momento
+                            </button>
                             <button type="button" class="btn btn-success" id="save-meal">
                                 <i class="fas fa-save me-2"></i>Guardar Comida
                             </button>
@@ -360,6 +363,43 @@
         </div>
     </div>
 </div>
+
+<!-- Modal for date/time selection -->
+<div class="modal fade" id="dateTimeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-clock me-2"></i>Seleccionar Fecha y Hora
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="meal-date" class="form-label">Fecha de la Comida</label>
+                    <input type="date" class="form-control" id="meal-date" required>
+                </div>
+                <div class="mb-3">
+                    <label for="meal-time" class="form-label">Hora de la Comida</label>
+                    <input type="time" class="form-control" id="meal-time" required>
+                </div>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Nota:</strong> Esta opción te permite guardar comidas que consumiste en el pasado. 
+                    La fecha y hora seleccionadas se usarán para registrar cuándo se consumió la comida.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-warning" id="confirm-save-for-later">
+                    <i class="fas fa-save me-2"></i>Guardar con Fecha Seleccionada
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -370,6 +410,7 @@ let selectedNotes = '';
 let detectedItems = [];
 let manualItems = [];
 let totalCalories = 0;
+let currentAnalysisId = null;
 
 // Step 1: Meal Type Selection
 document.querySelectorAll('.meal-type-card').forEach(card => {
@@ -512,9 +553,11 @@ function handleFile(file) {
         
         if (data.success) {
             detectedItems = data.items || [];
+            currentAnalysisId = data.analysis_id; // Guardar el ID del análisis
             
             // Debug: Log detected items
             console.log('Detected Items:', detectedItems);
+            console.log('Analysis ID:', currentAnalysisId);
             
             // Show success message
             showAnalysisSuccess(data.items.length, data.total_calories);
@@ -754,7 +797,8 @@ document.getElementById('save-meal').addEventListener('click', function() {
         meal_type: selectedMealType,
         notes: selectedNotes,
         total_calories: totalCalories,
-        items: [...detectedItems, ...manualItems]
+        items: [...detectedItems, ...manualItems],
+        analysis_id: currentAnalysisId
     };
     
     // Send to server
@@ -769,6 +813,78 @@ document.getElementById('save-meal').addEventListener('click', function() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            window.location.href = '{% url "core:dashboard" %}';
+        } else {
+            alert('Error al guardar la comida: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al guardar la comida');
+    });
+});
+
+// Save for later functionality
+document.getElementById('save-for-later').addEventListener('click', function() {
+    if (totalCalories === 0) {
+        alert('Por favor agrega al menos un alimento o bebida');
+        return;
+    }
+    
+    // Set default values for date and time
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    
+    document.getElementById('meal-date').value = yesterday.toISOString().split('T')[0];
+    document.getElementById('meal-time').value = '12:00';
+    
+    // Show the modal
+    const modal = new bootstrap.Modal(document.getElementById('dateTimeModal'));
+    modal.show();
+});
+
+// Confirm save for later
+document.getElementById('confirm-save-for-later').addEventListener('click', function() {
+    const mealDate = document.getElementById('meal-date').value;
+    const mealTime = document.getElementById('meal-time').value;
+    
+    if (!mealDate || !mealTime) {
+        alert('Por favor selecciona una fecha y hora válidas');
+        return;
+    }
+    
+    // Prepare data for saving with custom date/time
+    const mealData = {
+        meal_type: selectedMealType,
+        notes: selectedNotes,
+        total_calories: totalCalories,
+        items: [...detectedItems, ...manualItems],
+        custom_date: mealDate,
+        custom_time: mealTime,
+        analysis_id: currentAnalysisId
+    };
+    
+    // Send to server
+    fetch('{% url "core:api_save_meal" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify(mealData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('dateTimeModal'));
+            modal.hide();
+            
+            // Show success message
+            alert('Comida guardada exitosamente para la fecha seleccionada');
+            
+            // Redirect to dashboard
             window.location.href = '{% url "core:dashboard" %}';
         } else {
             alert('Error al guardar la comida: ' + data.error);
