@@ -4,7 +4,7 @@ from core.services import OpenAIService
 
 
 class Command(BaseCommand):
-    help = 'Probar la integración con OpenAI'
+    help = 'Probar la integración con OpenAI (GPT-5)'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -35,11 +35,11 @@ class Command(BaseCommand):
             is_valid = openai_service.validate_api_key()
             if is_valid:
                 self.stdout.write(
-                    self.style.SUCCESS('✅ API key de OpenAI es válida')
+                    self.style.SUCCESS('✅ API key de OpenAI es válida (GPT-5 disponible)')
                 )
             else:
                 self.stdout.write(
-                    self.style.ERROR('❌ API key de OpenAI no es válida')
+                    self.style.ERROR('❌ API key de OpenAI no es válida o el modelo no está disponible')
                 )
         except Exception as e:
             self.stdout.write(
@@ -69,7 +69,7 @@ class Command(BaseCommand):
             return
 
         # Test 2: Probar con imagen de ejemplo (si existe)
-        self.stdout.write('2️⃣ Probando análisis de imagen...')
+        self.stdout.write('2️⃣ Probando análisis de imagen con GPT-5...')
         self.stdout.write(
             self.style.WARNING('⚠️  Para probar el análisis de imagen, necesitas una imagen de comida.')
         )

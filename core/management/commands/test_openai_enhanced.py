@@ -6,7 +6,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
-    help = 'Probar la integración mejorada con OpenAI GPT-4o'
+    help = 'Probar la integración mejorada con OpenAI GPT-5'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -42,7 +42,7 @@ class Command(BaseCommand):
             is_valid = openai_service.validate_api_key()
             if is_valid:
                 self.stdout.write(
-                    self.style.SUCCESS('✅ API Key válida - GPT-4o disponible')
+                    self.style.SUCCESS('✅ API Key válida - GPT-5 disponible')
                 )
             else:
                 self.stdout.write(
@@ -58,15 +58,15 @@ class Command(BaseCommand):
         try:
             # Intentar obtener información del modelo
             response = openai_service.client.models.list()
-            gpt4o_available = any(model.id == 'gpt-4o' for model in response.data)
+            gpt5_available = any(model.id == 'gpt-5' for model in response.data)
             
-            if gpt4o_available:
+            if gpt5_available:
                 self.stdout.write(
-                    self.style.SUCCESS('✅ Modelo GPT-4o disponible')
+                    self.style.SUCCESS('✅ Modelo GPT-5 disponible')
                 )
             else:
                 self.stdout.write(
-                    self.style.WARNING('⚠️ Modelo GPT-4o no encontrado en la lista')
+                    self.style.WARNING('⚠️ Modelo GPT-5 no encontrado en la lista')
                 )
                 
             # Mostrar modelos disponibles
@@ -81,7 +81,7 @@ class Command(BaseCommand):
 
     def _test_full_integration(self, openai_service):
         """Probar integración completa"""
-        self.stdout.write('🧪 Probando integración completa con GPT-4o...')
+        self.stdout.write('🧪 Probando integración completa con GPT-5...')
         
         # Primero validar API key
         try:
