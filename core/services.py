@@ -1,6 +1,7 @@
 import base64
 import json
 import logging
+import os
 from typing import Dict, List, Optional, Tuple
 from django.conf import settings
 from django.core.files.base import ContentFile
@@ -27,76 +28,162 @@ class OpenAIService:
     
     def analyze_food_image(self, image_path: str) -> Dict:
         """
-        Analiza una imagen de comida usando GPT-4 Vision
+        Analiza una imagen de comida usando GPT-5 (visión)
         Retorna un diccionario con los alimentos identificados y sus calorías
         """
         try:
             # Codificar imagen
+            try:
+                file_size = os.path.getsize(image_path)
+            except Exception:
+                file_size = None
             base64_image = self.encode_image_to_base64(image_path)
             
             # Prompt para análisis de alimentos
             prompt = """
-            Analiza esta imagen de comida y proporciona la siguiente información en formato JSON:
-            
+            Analiza esta imagen de comida y proporciona la siguiente información EXACTAMENTE en este esquema:
             {
                 "foods": [
                     {
                         "name": "nombre del alimento",
-                        "estimated_grams": cantidad estimada en gramos,
-                        "calories_per_100g": calorías por 100g (estimación realista),
-                        "confidence": nivel de confianza (0-1)
+                        "estimated_grams": cantidad estimada en gramos (número),
+                        "calories_per_100g": calorías por 100g (número),
+                        "confidence": nivel de confianza (0-1, número)
                     }
                 ],
-                "total_calories": calorías totales estimadas,
-                "analysis_confidence": confianza general del análisis (0-1),
+                "total_calories": calorías totales estimadas (número),
+                "analysis_confidence": confianza general del análisis (0-1, número),
                 "notes": "observaciones adicionales"
             }
-            
-            Reglas importantes:
+            Reglas:
             - Identifica todos los alimentos visibles en la imagen
-            - Estima las cantidades en gramos de manera realista
-            - Proporciona calorías por 100g basadas en valores nutricionales estándar:
-              * Carne de pollo: ~165 kcal/100g
-              * Carne de res: ~250 kcal/100g
-              * Salchicha: ~300 kcal/100g
-              * Papas fritas/asadas: ~200 kcal/100g
-              * Arroz: ~130 kcal/100g
-              * Pan: ~250 kcal/100g
-              * Queso: ~350 kcal/100g
-              * Huevo: ~155 kcal/100g
-              * Lechuga: ~15 kcal/100g
-              * Tomate: ~20 kcal/100g
-              * Bebidas azucaradas: ~40 kcal/100ml
-            - Calcula las calorías totales sumando (gramos * calorías/100g) / 100
-            - Sé específico con los nombres de alimentos
-            - Si no estás seguro de algún alimento, inclúyelo con baja confianza
-            - NO devuelvas calorías en 0, siempre proporciona una estimación realista
+            - Estima cantidades realistas (grams 1-1000)
+            - Usa valores nutricionales estándar para kcal/100g (0-900)
+            - Calcula total_calories = suma((grams*calories_per_100g)/100)
+            - No devuelvas 0 salvo que sea claramente vacío
             """
+
+            # Logs de depuración (prompt y metadatos de imagen, sin base64)
+            logger.debug("GPT-5 vision request -> model=gpt-5, image_path=%s, image_size_bytes=%s", image_path, file_size)
+            logger.debug("GPT-5 prompt sent:\n%s", prompt.strip())
             
-            # Llamada a la API
+            # Definir herramienta (function calling) para forzar salida estructurada
+            tools = [
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "return_food_analysis",
+                        "description": "Devuelve el análisis de alimentos conforme al esquema requerido.",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "foods": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "name": {"type": "string"},
+                                            "estimated_grams": {"type": "number"},
+                                            "calories_per_100g": {"type": "number"},
+                                            "confidence": {"type": "number"}
+                                        },
+                                        "required": ["name", "estimated_grams", "calories_per_100g", "confidence"]
+                                    }
+                                },
+                                "total_calories": {"type": "number"},
+                                "analysis_confidence": {"type": "number"},
+                                "notes": {"type": "string"}
+                            },
+                            "required": ["foods", "total_calories", "analysis_confidence"]
+                        }
+                    }
+                }
+            ]
+            
+            # Llamada a la API (chat + tool calling)
             response = self.client.chat.completions.create(
-                model="gpt-4o",
+                model="gpt-5",
                 messages=[
+                    {
+                        "role": "system",
+                        "content": "Responde llamando a la función 'return_food_analysis' con argumentos JSON válidos y completos. No incluyas texto adicional."
+                    },
                     {
                         "role": "user",
                         "content": [
                             {"type": "text", "text": prompt},
                             {
                                 "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:image/jpeg;base64,{base64_image}"
-                                }
+                                "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}
                             }
                         ]
                     }
                 ],
-                max_tokens=1000,
-                temperature=0.1
+                tools=tools,
+                tool_choice={"type": "function", "function": {"name": "return_food_analysis"}}
             )
             
-            # Procesar respuesta
-            response_text = response.choices[0].message.content
-            analysis_data = self._parse_openai_response(response_text)
+            # Extraer y loguear la respuesta cruda
+            message = response.choices[0].message
+            raw_content = message.content or ""
+            logger.debug("GPT-5 raw message.content (first 500 chars): %s", (raw_content[:500] + '...') if len(raw_content) > 500 else raw_content)
+            tool_calls = getattr(message, "tool_calls", None) or []
+            if tool_calls:
+                try:
+                    tool_args = tool_calls[0].function.arguments
+                    logger.debug("GPT-5 tool_call name=%s args_snippet=%s", tool_calls[0].function.name, (tool_args[:500] + '...') if len(tool_args) > 500 else tool_args)
+                except Exception:
+                    logger.debug("GPT-5 tool_call present but arguments could not be logged")
+            
+            # Extraer argumentos de la tool call
+            analysis_data = None
+            try:
+                if tool_calls:
+                    tool_args = tool_calls[0].function.arguments
+                    analysis_data = json.loads(tool_args)
+            except Exception as e:
+                logger.debug("JSON load error from tool_call arguments: %s", e)
+                analysis_data = None
+            
+            if not analysis_data:
+                # Fallback: intentar parsear desde content
+                response_text = raw_content
+                logger.debug("Fallback to content parsing (first 500 chars): %s", (response_text[:500] + '...') if len(response_text) > 500 else response_text)
+                try:
+                    analysis_data = self._parse_openai_response(response_text)
+                except Exception:
+                    analysis_data = None
+            
+            if not analysis_data:
+                # Retry sin tools, forzando JSON con response_format
+                logger.debug("Retrying with response_format=json_object and no tools")
+                retry = self.client.chat.completions.create(
+                    model="gpt-5",
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": "Devuelve exclusivamente un objeto JSON válido conforme al esquema indicado. No agregues texto fuera del JSON."
+                        },
+                        {
+                            "role": "user",
+                            "content": [
+                                {"type": "text", "text": prompt},
+                                {
+                                    "type": "image_url",
+                                    "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}
+                                }
+                            ]
+                        }
+                    ],
+                    response_format={"type": "json_object"},
+                    max_completion_tokens=800
+                )
+                retry_text = retry.choices[0].message.content or ""
+                logger.debug("Retry raw content (first 500 chars): %s", (retry_text[:500] + '...') if len(retry_text) > 500 else retry_text)
+                try:
+                    analysis_data = json.loads(retry_text)
+                except Exception:
+                    analysis_data = self._parse_openai_response(retry_text)
             
             return analysis_data
             
@@ -117,7 +204,7 @@ class OpenAIService:
             json_str = response_text[start_idx:end_idx]
             parsed_data = json.loads(json_str)
             
-            # Validar estructura
+            # Validar estructura mínima esperada
             required_keys = ['foods', 'total_calories', 'analysis_confidence']
             for key in required_keys:
                 if key not in parsed_data:

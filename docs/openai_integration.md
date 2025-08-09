@@ -2,7 +2,7 @@
 
 ## Descripción
 
-Este documento describe la integración con OpenAI GPT-4o API para el reconocimiento automático de alimentos en imágenes.
+Este documento describe la integración con OpenAI GPT-5 (visión) para el reconocimiento automático de alimentos en imágenes.
 
 ## Configuración
 
@@ -56,7 +56,7 @@ Servicio de alto nivel que combina análisis y procesamiento.
 
 1. **Subida de Imagen**: El usuario sube una imagen de comida
 2. **Codificación**: La imagen se codifica a base64
-3. **Análisis OpenAI**: Se envía a GPT-4o con prompt específico
+3. **Análisis OpenAI**: Se envía a GPT-5 con prompt específico (modo chat multimodal)
 4. **Procesamiento**: Se parsea la respuesta JSON
 5. **Guardado**: Se guarda en la base de datos
 6. **UI**: Se procesan los datos para mostrar en la interfaz
@@ -118,14 +118,9 @@ python manage.py test_openai
 
 ## Costos y Límites
 
-### GPT-4 Vision Pricing:
-- Input: $0.01 / 1K tokens
-- Output: $0.03 / 1K tokens
-
-### Límites Recomendados:
-- Máximo 1000 tokens por análisis
-- Máximo 10MB por imagen
-- Formato: JPEG, PNG, WEBP
+- Modelo: GPT-5 (visión, modo chat)
+- Tokens recomendados: hasta 1000 por análisis
+- Tamaño de imagen recomendado: <= 10MB (JPEG/PNG/WEBP)
 
 ## Optimizaciones
 
